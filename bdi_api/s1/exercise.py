@@ -69,77 +69,84 @@ go in ascending order.
 
     return "OK"
 
-
-
 @s1.post("/aircraft/prepare")
 def prepare_data() -> str:
     """
-    Reads raw .json.gz files and prepares structured parquet files
-    for fast querying by the S1 endpoints.
+    Reads raw .json or .json.gz files and stores aircraft and positions
+    in a DuckDB database for fast querying by S1 endpoints.
     """
+
+    import os, shutil, gzip, json
+    import duckdb
 
     raw_dir = os.path.join(settings.raw_dir, "day=20231101")
     prepared_dir = os.path.join(settings.prepared_dir, "day=20231101")
+    db_file = os.path.join(prepared_dir, "aircraft.db")
+
+    # Ensure raw folder exists
+    if not os.path.exists(raw_dir):
+        raise RuntimeError(f"Raw folder does not exist: {raw_dir}")
+
+    files = [f for f in sorted(os.listdir(raw_dir)) if f.endswith((".json", ".json.gz"))]
+    if not files:
+        raise RuntimeError(f"No raw files found in {raw_dir}")
 
     # Clean prepared folder
     if os.path.exists(prepared_dir):
         shutil.rmtree(prepared_dir)
     os.makedirs(prepared_dir, exist_ok=True)
 
-    aircraft_rows = []
-    position_rows = []
+    # Prepare database
+    conn = duckdb.connect(db_file)
+    conn.execute("CREATE TABLE IF NOT EXISTS aircraft (icao TEXT, registration TEXT, type TEXT)")
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS positions (
+            icao TEXT, timestamp DOUBLE, lat DOUBLE, lon DOUBLE,
+            alt_baro DOUBLE, gs DOUBLE, emergency BOOLEAN
+        )
+    """)
 
-    if not os.path.exists(raw_dir):
-        return "OK"
-
-    for filename in sorted(os.listdir(raw_dir)):
+    for filename in files:
         file_path = os.path.join(raw_dir, filename)
+        try:
+            if filename.endswith(".gz"):
+                with gzip.open(file_path, "rt", encoding="utf-8") as f:
+                    data = json.load(f)
+            else:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+        except Exception as e:
+            print(f"[WARN] Skipping {filename}: {e}")
+            continue
 
-        with gzip.open(file_path, "rt", encoding="utf-8") as f:
-            data = json.load(f)
+        aircraft_rows = []
+        position_rows = []
 
         for ac in data.get("aircraft", []):
             icao = ac.get("hex")
             if not icao:
                 continue
+            aircraft_rows.append((icao, ac.get("r"), ac.get("t")))
 
-            # Aircraft metadata
-            aircraft_rows.append(
-                {
-                    "icao": icao,
-                    "registration": ac.get("r"),
-                    "type": ac.get("t"),
-                }
-            )
+            if ac.get("lat") is not None and ac.get("lon") is not None:
+                position_rows.append((
+                    icao,
+                    ac.get("seen_pos"),
+                    ac.get("lat"),
+                    ac.get("lon"),
+                    ac.get("alt_baro"),
+                    ac.get("gs"),
+                    ac.get("emergency")
+                ))
 
-            # Positions
-            if "lat" in ac and "lon" in ac:
-                position_rows.append(
-                    {
-                        "icao": icao,
-                        "timestamp": ac.get("seen_pos"),
-                        "lat": ac.get("lat"),
-                        "lon": ac.get("lon"),
-                        "alt_baro": ac.get("alt_baro"),
-                        "gs": ac.get("gs"),
-                        "emergency": ac.get("emergency"),
-                    }
-                )
+        # Insert rows into DuckDB
+        if aircraft_rows:
+            conn.executemany("INSERT INTO aircraft VALUES (?, ?, ?)", aircraft_rows)
+        if position_rows:
+            conn.executemany("INSERT INTO positions VALUES (?, ?, ?, ?, ?, ?, ?)", position_rows)
 
-    # Convert to DataFrame and remove duplicates
-    aircraft_df = pd.DataFrame(aircraft_rows).drop_duplicates("icao")
-    positions_df = pd.DataFrame(position_rows)
-
-    # Save as parquet
-    aircraft_df.to_parquet(
-        os.path.join(prepared_dir, "aircraft.parquet"),
-        index=False,
-    )
-    positions_df.to_parquet(
-        os.path.join(prepared_dir, "positions.parquet"),
-        index=False,
-    )
-
+    conn.close()
+    print(f"Prepared database with DuckDB at {db_file}")
     return "OK"
 
 
@@ -205,7 +212,7 @@ def get_aircraft_position(
 # =====================================================
 
 @s1.get("/aircraft/{icao}/stats")
-def get_aircraft_statistics(icao: str) -> dict:
+def get_aircraft_statistics(icao: str) -> dict: #works
     """
     Returns max_altitude_baro, max_ground_speed, had_emergency
     """
