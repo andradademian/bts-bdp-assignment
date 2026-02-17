@@ -15,3 +15,5 @@ pytest-env>=0.8,<1
 pytest-asyncio>=0.21,<1
 ruff>=0.1,<1
 moto>=4,<5
+pandas
+pyarrow
