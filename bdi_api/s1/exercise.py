@@ -1,15 +1,9 @@
 import os
 import shutil
-import gzip
-import json
-import sqlite3
 from typing import Annotated
 import sqlite3
-
-
-import duckdb
 import requests
-import pandas as pd
+
 from fastapi import APIRouter, status
 from fastapi.params import Query
 
@@ -28,9 +22,9 @@ s1 = APIRouter(
     tags=["s1"],
 )
 
-# =====================================================
+
 # DOWNLOAD RAW FILES
-# =====================================================
+
 
 @s1.post("/aircraft/download")
 def download_data(
@@ -74,9 +68,9 @@ go in ascending order.
     return "OK"
 
 
-# =====================================================
+
 # PREPARE DATA (store in SQLite database)
-# =====================================================
+
 @s1.post("/aircraft/prepare")
 def prepare_data() -> str:
     """
@@ -163,10 +157,8 @@ def prepare_data() -> str:
     print(f"Prepared {len(aircraft_df)} aircraft and {len(positions_df)} positions in {db_file}")
     return "OK"
 
-
-# =====================================================
 # LIST AIRCRAFT
-# =====================================================
+
 @s1.get("/aircraft/")
 def list_aircraft(num_results: int = 100, page: int = 0) -> list[dict]:
     """
@@ -195,9 +187,8 @@ def list_aircraft(num_results: int = 100, page: int = 0) -> list[dict]:
     return [{"icao": r[0], "registration": r[1], "type": r[2]} for r in rows]
 
 
-# =====================================================
 # AIRCRAFT POSITIONS
-# =====================================================
+
 @s1.get("/aircraft/{icao}/positions")
 def get_aircraft_position(
     icao: str, num_results: int = 1000, page: int = 0
@@ -238,9 +229,9 @@ def get_aircraft_position(
     ]
 
 
-# =====================================================
+
 # AIRCRAFT STATISTICS
-# =====================================================
+
 @s1.get("/aircraft/{icao}/stats")
 def get_aircraft_statistics(icao: str) -> dict: #works
     """
