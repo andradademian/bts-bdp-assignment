@@ -7,8 +7,10 @@ from fastapi.params import Query
 
 from bdi_api.settings import Settings
 
+# Load settings from environment variables (BDI_DB_URL)
 settings = Settings()
 
+# Router for all /api/s5/ endpoints
 s5 = APIRouter(
     responses={
         status.HTTP_404_NOT_FOUND: {"description": "Not found"},
@@ -20,12 +22,13 @@ s5 = APIRouter(
 
 
 def get_connection():
+    """Open a new PostgreSQL connection using the configured DB URL."""
     return psycopg2.connect(settings.db_url)
 
 
 @s5.post("/db/init")
 def init_database() -> str:
-    """Create all HR database tables using the official hr_schema.sql."""
+    """Drop and recreate all HR tables. Idempotent — safe to call multiple times."""
     schema_sql = """
     DROP TABLE IF EXISTS salary_history CASCADE;
     DROP TABLE IF EXISTS employee_project CASCADE;
@@ -61,6 +64,7 @@ def init_database() -> str:
         department_id INTEGER REFERENCES department(id) ON DELETE SET NULL
     );
 
+    -- Many-to-many between employees and projects
     CREATE TABLE employee_project (
         employee_id INTEGER REFERENCES employee(id) ON DELETE CASCADE,
         project_id INTEGER REFERENCES project(id) ON DELETE CASCADE,
@@ -78,6 +82,7 @@ def init_database() -> str:
         reason VARCHAR(200)
     );
 
+    -- Indexes to speed up common lookups
     CREATE INDEX idx_employee_department ON employee(department_id);
     CREATE INDEX idx_employee_email ON employee(email);
     CREATE INDEX idx_project_department ON project(department_id);
@@ -93,7 +98,7 @@ def init_database() -> str:
 
 @s5.post("/db/seed")
 def seed_database() -> str:
-    """Populate the HR database with the official hr_seed_data.sql sample data."""
+    """Insert sample data: 5 departments, 12 employees, 6 projects, and salary history."""
     seed_sql = """
     INSERT INTO department (name, location) VALUES
         ('Engineering', 'Barcelona'),
@@ -164,8 +169,9 @@ def seed_database() -> str:
 
 @s5.get("/departments/")
 def list_departments() -> list[dict]:
-    """Return all departments: id, name, location."""
+    """Return all departments (id, name, location)."""
     with get_connection() as conn:
+        # RealDictCursor returns rows as dicts keyed by column name
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute("SELECT id, name, location FROM department ORDER BY id")
             return [dict(row) for row in cur.fetchall()]
@@ -176,8 +182,8 @@ def list_employees(
     page: Annotated[int, Query(description="Page number (1-indexed)", ge=1)] = 1,
     per_page: Annotated[int, Query(description="Number of employees per page", ge=1, le=100)] = 10,
 ) -> list[dict]:
-    """Return employees with department name, paginated."""
-    offset = (page - 1) * per_page
+    """Return paginated employees with their department name (LEFT JOIN)."""
+    offset = (page - 1) * per_page  # rows to skip
     with get_connection() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(
@@ -198,7 +204,7 @@ def list_employees(
                     "first_name": row["first_name"],
                     "last_name": row["last_name"],
                     "email": row["email"],
-                    "salary": float(row["salary"]),
+                    "salary": float(row["salary"]),  # Decimal -> float for JSON
                     "department_name": row["department_name"],
                 }
                 for row in rows
@@ -207,7 +213,7 @@ def list_employees(
 
 @s5.get("/departments/{dept_id}/employees")
 def list_department_employees(dept_id: int) -> list[dict]:
-    """Return all employees in a specific department."""
+    """Return all employees in a given department."""
     with get_connection() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(
@@ -227,7 +233,7 @@ def list_department_employees(dept_id: int) -> list[dict]:
                     "last_name": row["last_name"],
                     "email": row["email"],
                     "salary": float(row["salary"]),
-                    "hire_date": str(row["hire_date"]),
+                    "hire_date": str(row["hire_date"]),  # date -> string for JSON
                 }
                 for row in rows
             ]
@@ -235,7 +241,7 @@ def list_department_employees(dept_id: int) -> list[dict]:
 
 @s5.get("/departments/{dept_id}/stats")
 def department_stats(dept_id: int) -> dict:
-    """Return KPIs for a department: name, employee_count, avg_salary, project_count."""
+    """Return KPIs for a department: employee count, avg salary, project count."""
     with get_connection() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(
@@ -266,7 +272,7 @@ def department_stats(dept_id: int) -> dict:
 
 @s5.get("/employees/{emp_id}/salary-history")
 def salary_history(emp_id: int) -> list[dict]:
-    """Return salary evolution for an employee, ordered by change_date ascending."""
+    """Return salary changes for an employee, ordered by date ascending."""
     with get_connection() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(
