@@ -19,7 +19,6 @@ env
 venv
 .venv
 .ruff_cache
-key_pair_s5.pem
 
 # vim temporary files
 *~
