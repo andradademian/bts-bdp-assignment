@@ -1,4 +1,4 @@
-.PHONY: run test build_docker run_docker stop_docker
+.PHONY: run test build_docker run_docker stop_docker mongo mongo_stop
 
 .DEFAULT_GOAL:=help
 
@@ -18,3 +18,9 @@ run_docker: build_docker
 
 stop_docker:
 	docker stop $$(docker ps -q --filter ancestor=bdi-api:latest)
+
+mongo:
+	docker compose -f docker/docker-compose.yml up -d
+
+mongo_stop:
+	docker compose -f docker/docker-compose.yml down
