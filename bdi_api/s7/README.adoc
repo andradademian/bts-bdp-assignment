@@ -1,0 +1,79 @@
+= Session 7: NoSQL Practice - Neo4J Social Graph
+:toc:
+
+== Overview
+
+In this assignment you will build a REST API backed by Neo4J to manage a social network graph.
+
+You must implement all the endpoints defined in `exercise.py` so that the evaluation tests in `tests/s7/test_s7.py` pass.
+
+== Prerequisites
+
+* Neo4J running via Docker
+* Python dependencies installed: `pip install -r requirements.txt`
+
+== Neo4J Setup
+
+Start Neo4J with Docker Compose:
+
+[source,bash]
+----
+make neo4j
+----
+
+To stop it:
+
+[source,bash]
+----
+make neo4j_stop
+----
+
+== Configuration
+
+Set the Neo4J connection via environment variables:
+
+[source,bash]
+----
+export BDI_NEO4J_URL="bolt://localhost:7687"
+export BDI_NEO4J_USER="neo4j"
+export BDI_NEO4J_PASSWORD="password123"
+----
+
+== Running
+
+[source,bash]
+----
+uvicorn bdi_api.app:app --reload --port 8080
+----
+
+Visit http://localhost:8080/docs to see and test the API.
+
+== Evaluation
+
+[source,bash]
+----
+pytest tests/s7/ -v
+----
+
+All tests in `TestItCanBeEvaluated` must pass. Do NOT modify those tests.
+
+== Endpoints
+
+|===
+|Method |Path |Description
+
+|POST |`/api/s7/graph/person` |Create a person node
+|GET |`/api/s7/graph/persons` |List all persons
+|GET |`/api/s7/graph/person/{name}/friends` |Get friends of a person
+|POST |`/api/s7/graph/relationship` |Create a FRIENDS_WITH relationship
+|GET |`/api/s7/graph/person/{name}/recommendations` |Friend recommendations
+|===
+
+== Hints
+
+* Use the `neo4j` Python driver: `from neo4j import GraphDatabase`
+* Connect with: `GraphDatabase.driver(url, auth=(user, password))`
+* Run queries with: `driver.session().run("MATCH (p:Person) RETURN p")`
+* Access results: `[{"name": record["p"]["name"]} for record in result]`
+* For recommendations: find friends-of-friends NOT already direct friends, count mutual friends
+* Return HTTP 404 if person not found

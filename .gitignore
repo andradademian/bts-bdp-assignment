@@ -33,3 +33,5 @@ venv
 
 .report.json
 .pytest.json
+
+CLAUDE.md

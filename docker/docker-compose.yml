@@ -10,5 +10,17 @@ services:
     volumes:
       - mongodb_data:/data/db
 
+  neo4j:
+    image: neo4j:5
+    container_name: bdi-neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: neo4j/password123
+    volumes:
+      - neo4j_data:/data
+
 volumes:
   mongodb_data:
+  neo4j_data:
