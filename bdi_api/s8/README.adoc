@@ -1,0 +1,90 @@
+= Session 8: Data Pipelines - Aircraft Data Pipeline
+
+== Overview
+
+Build a data pipeline using Apache Airflow that downloads aircraft tracking data,
+enriches it with aircraft metadata, and exposes the results via a REST API.
+
+== Prerequisites
+
+* Airflow + MinIO running via Docker Compose (from the exercises)
+* MinIO buckets `bronze` and `silver` already created
+* Project code: `bdi_api/s8/exercise.py` (skeleton)
+* DAG location: `dags/`
+
+== Data Sources
+
+* **Aircraft tracking data:** https://samples.adsbexchange.com/readsb-hist/2023/11/01/
+* **Aircraft database:** CSV with ICAO codes, registration, owner, manufacturer, model
+* **Fuel consumption rates:** https://github.com/martsec/flight_co2_analysis/blob/main/data/aircraft_type_fuel_consumption_rates.json
+
+== Task 1: Build the Data Pipeline DAG
+
+Create a DAG in `dags/` that:
+
+1. Downloads aircraft tracking JSON files from the ADS-B Exchange API
+2. Stores raw data in S3 bronze layer
+3. Parses and cleans the data
+4. Enriches with aircraft metadata (owner, manufacturer, model)
+5. Stores processed data in S3 silver layer (Parquet format)
+6. Loads the enriched data into a database (PostgreSQL or SQLite)
+
+Since `dags/` is mounted into the container, Airflow will detect it automatically.
+
+== Task 2: Implement the API Endpoints
+
+=== `GET /api/s8/aircraft/`
+
+List all aircraft with enriched data, ordered by ICAO ascending.
+
+Parameters:
+
+* `num_results` (int, default 100): number of results per page
+* `page` (int, default 0): page number (0-indexed)
+
+Returns a list of `AircraftReturn` objects with fields: `icao`, `registration`, `type`, `owner`, `manufacturer`, `model`.
+
+=== `GET /api/s8/aircraft/{icao}/co2`
+
+Calculate CO2 emissions for a given aircraft on a specific day.
+
+Parameters:
+
+* `icao` (path): aircraft ICAO code
+* `day` (query): date string (e.g. "2023-11-01")
+
+Computation:
+
+* Each row in tracking data = 5-second observation
+* `hours_flown = (number_of_observations * 5) / 3600`
+* Look up `galph` (gallons per hour) from fuel consumption rates JSON using aircraft ICAO type
+* `fuel_used_kg = hours_flown * galph * 3.04`
+* `co2_tons = (fuel_used_kg * 3.15) / 907.185`
+* If fuel consumption rate is not available, return `None` for `co2`
+
+== Running
+
+[source,bash]
+----
+uvicorn bdi_api.app:app --reload --port 8080
+----
+
+Visit http://localhost:8080/docs to see and test the API.
+
+== Evaluation
+
+[source,bash]
+----
+pytest tests/s8/ -v
+----
+
+All tests in `TestItCanBeEvaluated` must pass.
+
+== Hints
+
+* Use `requests` to download tracking data files
+* Use `pandas` for data manipulation and Parquet conversion
+* The tracking JSON files contain an `aircraft` array with fields like `hex` (ICAO), `r` (registration), `t` (type)
+* For the aircraft database, download and parse the CSV to enrich your data
+* Store intermediate results in S3 following the bronze/silver/gold pattern
+* Make your DAG idempotent: re-running should produce the same result
