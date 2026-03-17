@@ -1,0 +1,55 @@
+= S9: CI/CD Pipeline API
+
+== Objective
+
+Build an API that models CI/CD pipeline runs and their stages.
+This exercise reinforces the CI/CD concepts from session 9 while
+practicing API development.
+
+== Endpoints
+
+=== GET /api/s9/pipelines
+
+List all CI/CD pipeline runs. Supports filtering and pagination.
+
+Query parameters:
+
+* `repository` (optional): filter by repository name
+* `status_filter` (optional): filter by status ("success", "failure", "running", "pending")
+* `num_results` (default 100): results per page
+* `page` (default 0): page number (0-indexed)
+
+Returns results ordered by `started_at` descending.
+
+=== GET /api/s9/pipelines/{pipeline_id}/stages
+
+Get the stages of a specific pipeline run, in execution order.
+
+Returns 404 if the pipeline is not found.
+
+== Data
+
+You need to create and populate your own data source (JSON file, SQLite, or any storage).
+
+Each pipeline run must have:
+
+* `id`: unique identifier (e.g., "run-001")
+* `repository`: repository name
+* `branch`: branch name
+* `status`: one of "success", "failure", "running", "pending"
+* `triggered_by`: one of "push", "pull_request", "schedule", "manual"
+* `started_at`: ISO 8601 timestamp
+* `finished_at`: ISO 8601 timestamp or null (if still running)
+* `stages`: list of stage names
+
+Each stage must have:
+
+* `name`: stage name (e.g., "lint", "test", "build")
+* `status`: one of "success", "failure", "running", "pending", "skipped"
+* `started_at`: ISO 8601 timestamp
+* `finished_at`: ISO 8601 timestamp or null
+* `logs_url`: URL path to logs (e.g., "/api/s9/pipelines/run-001/stages/lint/logs")
+
+== Evaluation
+
+Run `pytest tests/s9/ -v`. All tests in `TestItCanBeEvaluated` must pass.
