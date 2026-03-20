@@ -79,24 +79,96 @@ PIPELINE_RUNS = [
 
 PIPELINE_STAGES = {
     "run-001": [
-        PipelineStage(name="lint",  status="success", started_at=datetime(2026, 3, 10, 10, 0, 0),  finished_at=datetime(2026, 3, 10, 10, 0, 45), logs_url="/api/s9/pipelines/run-001/stages/lint/logs"),
-        PipelineStage(name="test",  status="success", started_at=datetime(2026, 3, 10, 10, 0, 45), finished_at=datetime(2026, 3, 10, 10, 3, 20), logs_url="/api/s9/pipelines/run-001/stages/test/logs"),
-        PipelineStage(name="build", status="success", started_at=datetime(2026, 3, 10, 10, 3, 20), finished_at=datetime(2026, 3, 10, 10, 5, 30), logs_url="/api/s9/pipelines/run-001/stages/build/logs"),
+        PipelineStage(
+            name="lint",
+            status="success",
+            started_at=datetime(2026, 3, 10, 10, 0, 0),
+            finished_at=datetime(2026, 3, 10, 10, 0, 45),
+            logs_url="/api/s9/pipelines/run-001/stages/lint/logs",
+        ),
+        PipelineStage(
+            name="test",
+            status="success",
+            started_at=datetime(2026, 3, 10, 10, 0, 45),
+            finished_at=datetime(2026, 3, 10, 10, 3, 20),
+            logs_url="/api/s9/pipelines/run-001/stages/test/logs",
+        ),
+        PipelineStage(
+            name="build",
+            status="success",
+            started_at=datetime(2026, 3, 10, 10, 3, 20),
+            finished_at=datetime(2026, 3, 10, 10, 5, 30),
+            logs_url="/api/s9/pipelines/run-001/stages/build/logs",
+        ),
     ],
     "run-002": [
-        PipelineStage(name="lint", status="success", started_at=datetime(2026, 3, 11, 9, 0, 0),  finished_at=datetime(2026, 3, 11, 9, 0, 45), logs_url="/api/s9/pipelines/run-002/stages/lint/logs"),
-        PipelineStage(name="test", status="failure", started_at=datetime(2026, 3, 11, 9, 0, 45), finished_at=datetime(2026, 3, 11, 9, 3, 0),  logs_url="/api/s9/pipelines/run-002/stages/test/logs"),
+        PipelineStage(
+            name="lint",
+            status="success",
+            started_at=datetime(2026, 3, 11, 9, 0, 0),
+            finished_at=datetime(2026, 3, 11, 9, 0, 45),
+            logs_url="/api/s9/pipelines/run-002/stages/lint/logs",
+        ),
+        PipelineStage(
+            name="test",
+            status="failure",
+            started_at=datetime(2026, 3, 11, 9, 0, 45),
+            finished_at=datetime(2026, 3, 11, 9, 3, 0),
+            logs_url="/api/s9/pipelines/run-002/stages/test/logs",
+        ),
     ],
     "run-003": [
-        PipelineStage(name="lint",  status="success", started_at=datetime(2026, 3, 12, 8, 0, 0),  finished_at=datetime(2026, 3, 12, 8, 0, 45), logs_url="/api/s9/pipelines/run-003/stages/lint/logs"),
-        PipelineStage(name="test",  status="success", started_at=datetime(2026, 3, 12, 8, 0, 45), finished_at=datetime(2026, 3, 12, 8, 3, 0),  logs_url="/api/s9/pipelines/run-003/stages/test/logs"),
-        PipelineStage(name="build", status="running", started_at=datetime(2026, 3, 12, 8, 3, 0),  finished_at=None,                             logs_url="/api/s9/pipelines/run-003/stages/build/logs"),
+        PipelineStage(
+            name="lint",
+            status="success",
+            started_at=datetime(2026, 3, 12, 8, 0, 0),
+            finished_at=datetime(2026, 3, 12, 8, 0, 45),
+            logs_url="/api/s9/pipelines/run-003/stages/lint/logs",
+        ),
+        PipelineStage(
+            name="test",
+            status="success",
+            started_at=datetime(2026, 3, 12, 8, 0, 45),
+            finished_at=datetime(2026, 3, 12, 8, 3, 0),
+            logs_url="/api/s9/pipelines/run-003/stages/test/logs",
+        ),
+        PipelineStage(
+            name="build",
+            status="running",
+            started_at=datetime(2026, 3, 12, 8, 3, 0),
+            finished_at=None,
+            logs_url="/api/s9/pipelines/run-003/stages/build/logs",
+        ),
     ],
     "run-004": [
-        PipelineStage(name="lint",   status="success", started_at=datetime(2026, 3, 13, 7, 0, 0),  finished_at=datetime(2026, 3, 13, 7, 0, 45), logs_url="/api/s9/pipelines/run-004/stages/lint/logs"),
-        PipelineStage(name="test",   status="success", started_at=datetime(2026, 3, 13, 7, 0, 45), finished_at=datetime(2026, 3, 13, 7, 3, 0),  logs_url="/api/s9/pipelines/run-004/stages/test/logs"),
-        PipelineStage(name="build",  status="success", started_at=datetime(2026, 3, 13, 7, 3, 0),  finished_at=datetime(2026, 3, 13, 7, 5, 0),  logs_url="/api/s9/pipelines/run-004/stages/build/logs"),
-        PipelineStage(name="deploy", status="pending", started_at=datetime(2026, 3, 13, 7, 5, 0),  finished_at=None,                             logs_url="/api/s9/pipelines/run-004/stages/deploy/logs"),
+        PipelineStage(
+            name="lint",
+            status="success",
+            started_at=datetime(2026, 3, 13, 7, 0, 0),
+            finished_at=datetime(2026, 3, 13, 7, 0, 45),
+            logs_url="/api/s9/pipelines/run-004/stages/lint/logs",
+        ),
+        PipelineStage(
+            name="test",
+            status="success",
+            started_at=datetime(2026, 3, 13, 7, 0, 45),
+            finished_at=datetime(2026, 3, 13, 7, 3, 0),
+            logs_url="/api/s9/pipelines/run-004/stages/test/logs",
+        ),
+        PipelineStage(
+            name="build",
+            status="success",
+            started_at=datetime(2026, 3, 13, 7, 3, 0),
+            finished_at=datetime(2026, 3, 13, 7, 5, 0),
+            logs_url="/api/s9/pipelines/run-004/stages/build/logs",
+        ),
+        PipelineStage(
+            name="deploy",
+            status="pending",
+            started_at=datetime(2026, 3, 13, 7, 5, 0),
+            finished_at=None,
+            logs_url="/api/s9/pipelines/run-004/stages/deploy/logs",
+        ),
     ],
 }
 
@@ -130,6 +202,9 @@ def list_pipelines(
 def get_pipeline_stages(pipeline_id: str) -> list[PipelineStage]:
     pipeline_ids = [r.id for r in PIPELINE_RUNS]
     if pipeline_id not in pipeline_ids:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Pipeline '{pipeline_id}' not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline '{pipeline_id}' not found",
+        )
 
     return PIPELINE_STAGES.get(pipeline_id, [])
