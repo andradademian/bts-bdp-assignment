@@ -19,3 +19,5 @@ ruff>=0.1,<1
 moto>=4,<5
 pandas
 pyarrow
+neo4j
+
