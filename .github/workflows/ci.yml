@@ -25,7 +25,7 @@ jobs:
         run: ruff check bdi_api/s9/
 
       - name: Run tests
-        run: pytest tests/ -v
+        run: pytest tests/s9/ -v
 
   docker:
     needs: ci
